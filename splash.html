@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DTECH MUSIC // PREASX24</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+        }
+
+        .splash {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at 50% 10%, #001a2b, #000 80%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            isolation: isolate;
+            perspective: 1000px;
+        }
+
+        /* 3D Grid background */
+        .grid {
+            position: absolute;
+            bottom: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background-image:
+                linear-gradient(rgba(0, 166, 255, 0.15) 2px, transparent 2px),
+                linear-gradient(90deg, rgba(0, 166, 255, 0.15) 2px, transparent 2px);
+            background-size: 80px 80px;
+            z-index: 1;
+            transform-origin: top;
+            transform: rotateX(75deg);
+            animation: gridMove 20s linear infinite;
+            mask-image: linear-gradient(to bottom, transparent 10%, black 70%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 10%, black 70%);
+        }
+
+        /* Secondary subtle purple grid overlay */
+        .grid::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(138, 43, 226, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(138, 43, 226, 0.1) 1px, transparent 1px);
+            background-size: 160px 160px;
+            pointer-events: none;
+        }
+
+        @keyframes gridMove {
+            0% { transform: rotateX(75deg) translateY(0); }
+            100% { transform: rotateX(75deg) translateY(160px); }
+        }
+
+        /* Animated waveform (canvas) */
+        #waveformCanvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* Main content */
+        .content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            max-width: 90%;
+            animation: fadeIn 2s ease-out;
+        }
+
+        /* DTECH logo with glitch */
+        .dtech {
+            font-size: clamp(4rem, 15vw, 10rem);
+            font-weight: 900;
+            font-family: 'Arial Black', sans-serif;
+            letter-spacing: -0.02em;
+            line-height: 1;
+            color: #00a6ff;
+            text-shadow:
+                0 0 20px #00a6ff,
+                2px 2px 0 #003366,
+                -2px -2px 0 #0066aa;
+            animation: glitch 5s infinite;
+            margin-bottom: 0.1em;
+        }
+
+        .dtech span {
+            display: inline-block;
+            animation: flicker 8s infinite;
+        }
+
+        /* MUSIC */
+        .music {
+            font-size: clamp(2rem, 6vw, 4rem);
+            font-weight: 900;
+            font-family: 'Arial Black', sans-serif;
+            font-style: italic;
+            color: transparent;
+            -webkit-text-stroke: 2px #00a6ff;
+            letter-spacing: 0.4em;
+            margin-left: 0.4em; /* compensate for spacing */
+            text-shadow: 0 0 10px rgba(0, 166, 255, 0.5);
+            margin-bottom: 0.5em;
+            animation: pulseText 3s infinite alternate;
+        }
+
+        @keyframes pulseText {
+            0% { text-shadow: 0 0 10px rgba(0, 166, 255, 0.5); }
+            100% { text-shadow: 0 0 25px rgba(0, 166, 255, 1); }
+        }
+
+        /* Preasx24 (Made by) */
+        .preasx-footer {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: clamp(0.9rem, 2vw, 1.2rem);
+            font-family: 'Courier New', monospace;
+            color: #8a2be2; /* Subtle purple matching the secondary grid color */
+            text-shadow: 0 0 10px rgba(138, 43, 226, 0.8);
+            letter-spacing: 0.2em;
+            z-index: 15;
+            opacity: 0;
+            animation: fadeInSlow 3s ease-out 1s forwards;
+            white-space: nowrap;
+        }
+
+        .preasx-footer span {
+            color: #00a6ff;
+            font-weight: bold;
+            text-shadow: 0 0 15px #00a6ff;
+        }
+
+        /* Progress bar */
+        .progress {
+            width: min(500px, 80vw);
+            height: 3px;
+            background: rgba(0, 166, 255, 0.2);
+            margin: 3rem auto 2rem auto; /* Extra top margin to balance the removed preasx text */
+            position: relative;
+            overflow: hidden;
+            border-radius: 2px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: #00a6ff;
+            box-shadow: 0 0 20px #00a6ff;
+            animation: fillProgress 6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 20px;
+            height: 100%;
+            background: white;
+            filter: blur(10px);
+            animation: scan 3s linear infinite;
+        }
+
+        /* --- Terminal (BOTTOM LEFT) REMOVED as requested --- */
+        /* .terminal block completely removed */
+
+        /* --- Data stream (TOP RIGHT) REMOVED as requested --- */
+        /* .data-stream block completely removed */
+
+        /* Scanning line overlay */
+        .scanner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #00a6ff, transparent);
+            filter: blur(3px);
+            opacity: 0.5;
+            z-index: 20;
+            pointer-events: none;
+            animation: scanMove 12s linear infinite;
+        }
+
+        /* Floating particles */
+        .particles {
+            position: absolute;
+            inset: 0;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            color: #00a6ff;
+            font-size: 14px;
+            opacity: 0.3;
+            animation: floatParticle 20s linear infinite;
+            text-shadow: 0 0 5px #00a6ff;
+        }
+
+        /* Animations */
+        @keyframes glitch {
+            0%, 100% { transform: translate(0); }
+            5% { transform: translate(-2px, 1px); }
+            10% { transform: translate(2px, -1px); }
+            15% { transform: translate(-1px, 2px); }
+            20% { transform: translate(1px, -2px); }
+            25% { transform: translate(0); }
+        }
+
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            30% { opacity: 0.9; }
+            31% { opacity: 1; }
+            60% { opacity: 0.8; }
+            61% { opacity: 1; }
+        }
+
+        @keyframes blink {
+            0%, 100% { border-color: #00a6ff; opacity: 1; }
+            50% { border-color: transparent; opacity: 0; }
+        }
+
+        @keyframes fillProgress {
+            0% { width: 0%; }
+            20% { width: 30%; }
+            40% { width: 55%; }
+            60% { width: 75%; }
+            80% { width: 90%; }
+            100% { width: 100%; }
+        }
+
+        @keyframes scan {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(400%); }
+        }
+
+        @keyframes scanMove {
+            0% { top: -10px; }
+            100% { top: 110vh; }
+        }
+
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+
+        @keyframes dataFade {
+            0% { opacity: 0; transform: translateX(10px); }
+            20% { opacity: 1; transform: translateX(0); }
+            80% { opacity: 1; }
+            100% { opacity: 0; transform: translateX(-10px); }
+        }
+
+        @keyframes floatParticle {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.4; }
+            90% { opacity: 0.4; }
+            100% { transform: translateY(-100px) rotate(180deg); opacity: 0; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes fadeInSlow {
+            from { opacity: 0; transform: translate(-50%, 10px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
+        }
+
+        /* Responsive: only preasx-footer remains visible */
+        @media (max-width: 600px) {
+            /* No adjustments needed for removed elements */
+        }
+    </style>
+</head>
+<body>
+    <div class="splash">
+        <div class="grid"></div>
+        <canvas id="waveformCanvas"></canvas>
+        <div class="particles" id="particles"></div>
+
+        <div class="content">
+            <div class="dtech">
+                <span>D</span>T<span>E</span>C<span>H</span>
+            </div>
+            <div class="music">MUSIC</div>
+            <div class="progress">
+                <div class="progress-fill"></div>
+            </div>
+        </div>
+
+        <div class="preasx-footer">
+            <span>preasx24</span>
+        </div>
+
+        <!-- BOTTOM LEFT TERMINAL BLOCK REMOVED -->
+        <!-- TOP RIGHT DATA STREAM BLOCK REMOVED -->
+
+        <div class="scanner"></div>
+    </div>
+
+    <script>
+        (function() {
+            // Waveform canvas: draw smooth animated oscilloscope lines
+            const canvas = document.getElementById('waveformCanvas');
+            const ctx = canvas.getContext('2d');
+            let width, height;
+
+            function resizeCanvas() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
+            }
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            let time = 0;
+            function drawWaveform() {
+                ctx.clearRect(0, 0, width, height);
+                ctx.lineWidth = 2;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.shadowColor = '#00a6ff';
+                ctx.shadowBlur = 12;
+
+                const lines = 3; // Number of wave lines
+
+                for (let i = 0; i < lines; i++) {
+                    ctx.beginPath();
+                    // Different opacity for each line to create depth
+                    ctx.strokeStyle = `rgba(0, 166, 255, ${0.4 + (i * 0.2)})`;
+
+                    for (let x = 0; x < width; x += 5) {
+                        // Complex sine wave combination for visual interest
+                        const frequency1 = 0.003 + (i * 0.001);
+                        const frequency2 = 0.008 + (i * 0.0015);
+
+                        // Center horizontal alignment
+                        const centerY = height / 2;
+
+                        // Amplitudes scale with screen size but stay bounded
+                        const amplitude1 = (height * 0.15) * Math.sin(time * 0.005 + i);
+                        const amplitude2 = (height * 0.08) * Math.cos(time * 0.01 - i);
+
+                        // Simulated music "beat" pulsing effect, slowed down
+                        const beat = Math.pow(Math.sin(time * 0.02 + i), 4) * (height * 0.05);
+
+                        const y = centerY
+                                + Math.sin(x * frequency1 + time * 0.015 + i) * amplitude1
+                                + Math.cos(x * frequency2 - time * 0.01 + i) * (amplitude2 + beat);
+
+                        if (x === 0) {
+                            ctx.moveTo(x, y);
+                        } else {
+                            ctx.lineTo(x, y);
+                        }
+                    }
+                    ctx.stroke();
+                }
+
+                // Slow down the time increment for smoother waveform movement
+                time += 0.4;
+                requestAnimationFrame(drawWaveform);
+            }
+            drawWaveform();
+
+            // Floating particles (music notes / audio symbols)
+            const particleContainer = document.getElementById('particles');
+            const notes = ['♫', '♪', '♩', '♬', 'ıllıllı', 'ılı.lıllılı.ıllı'];
+            for (let i = 0; i < 20; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.textContent = notes[Math.floor(Math.random() * notes.length)];
+                p.style.left = Math.random() * 100 + '%';
+                p.style.animationDelay = Math.random() * 20 + 's';
+                p.style.fontSize = (Math.random() * 15 + 10) + 'px';
+                particleContainer.appendChild(p);
+            }
+
+            // TOP RIGHT DATA STREAM REMOVED — no setInterval for dataStream
+            // BOTTOM LEFT TERMINAL REMOVED — no typing animation elements
+            // Therefore the associated JavaScript for those features is omitted.
+
+        })();
+    </script>
+</body>
+</html>

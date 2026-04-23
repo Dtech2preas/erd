@@ -1,0 +1,202 @@
+DTECH MUSIC - ANDROID TECHNICAL REPORT
+========================================
+
+1. OVERVIEW
+----------------------------------------
+- What the application is: DTECH Music is a native Android music streaming and downloading application built entirely with modern Android development paradigms (Jetpack Compose, Kotlin Coroutines, Room).
+- Its main purpose: It provides a seamless, ad-free music listening experience by leveraging backend video/audio services (primarily YouTube via InnerTube and Piped/Invidious APIs) to stream and download music directly to the user's device, maintaining a local SQLite database for library management.
+- Key features:
+  - Ad-free streaming directly from YouTube sources.
+  - Background playback with a fully custom Media3/ExoPlayer integration.
+  - Local caching and downloading of audio (via yt-dlp integration).
+  - Smart Shuffle (context-aware recommendations using Last.fm and user history).
+  - High-End Mode (aggressive pre-fetching of streams for gapless playback).
+  - Synchronized Lyrics integration (fetching from LrcLib and KuGou).
+  - Robust offline library with custom playlist and favorites management.
+  - "Tech Vibe" UI featuring a dark theme with neon blue/gold accents, custom visualizers, and haptic feedback.
+
+2. ARCHITECTURE
+----------------------------------------
+- Project structure: The app follows a standard Android App module structure (`app/src/main/`).
+  - `data/`: Contains Room database definitions, DAOs, and Entity models (`AppDatabase`, `SongDao`, `PlaylistDao`, etc.).
+  - `ui/`: Holds all Jetpack Compose screens and UI components (`HomeScreen`, `FullScreenPlayer`, `Navigation`, `Theme`).
+  - `workers/`: Background work definitions using Android WorkManager (`MusicDownloadWorker`, `StreamRefresherWorker`).
+  - `utils/`: Helper utilities (`SmartShuffleManager`, `LastFmClient`, `RemoteConfigClient`).
+  - `lyrics/`: Data providers and parsers for synchronized lyrics.
+  - Root package: Contains core business logic and entry points (`MainActivity`, `MusicDownloaderApp`, `MusicViewModel`, `MusicRepository`, `MusicService`, API clients like `InnerTubeClient`).
+- How components are organized: The architecture strongly leans towards MVVM (Model-View-ViewModel) combined with Unidirectional Data Flow (UDF) via Jetpack Compose.
+- Design patterns used:
+  - Singleton Pattern: Used for database access (`AppDatabase.getDatabase`), API clients (`InstanceRegistry`, `InnerTubeClient`).
+  - Repository Pattern: `MusicRepository` centralizes data fetching from network (InnerTube/Piped) and local databases (Room), exposing clean APIs to the ViewModel.
+  - Observer Pattern: `StateFlow` and `LiveData` in `MusicViewModel` are observed by Jetpack Compose UI components.
+  - Factory Pattern: `ExoPlayer` data source factories (`ResolvingDataSource.Factory`).
+
+3. CORE LOGIC
+----------------------------------------
+- Explain the main functionality of the app step-by-step:
+  1. Discovery: Users browse the `HomeScreen`, which populates 'Made for You' and 'Trending' lists by querying InnerTube APIs based on saved genres and favorite artists.
+  2. Playback: When a user clicks a song, the `MusicViewModel` requests the `MusicRepository` to fetch the stream URL.
+  3. Audio Routing: The stream URL is passed to `MusicService` (which wraps `ExoPlayer`), establishing a foreground media session.
+  4. Downloading: Alternatively, users can trigger a download. `MusicDownloadWorker` invokes `YoutubeDL` to fetch the audio file, which is saved locally and registered in the Room database.
+- How the app processes data: Data flows from network APIs (JSON parsing via OkHttp) -> `MusicRepository` (mapping and caching) -> Room Database (persistence) -> `MusicViewModel` (StateFlow updates) -> Compose UI (recomposition).
+- Key algorithms or workflows:
+  - Smart Shuffle Algorithm: `SmartShuffleManager` calculates the next track by looking at session history (to prevent immediate repeats), then querying Last.fm for similar tracks. If that fails, it falls back to the user's top artists, favorites, or genres.
+  - Stream Resolution: `MusicService` uses a custom `ResolvingDataSource` to intercept custom URIs (`dtech://stream/ID`) and dynamically resolve them into actual expiring media stream URLs just in time for ExoPlayer buffering.
+
+4. FUNCTIONAL FLOW
+----------------------------------------
+- What happens when the app starts: `MusicDownloaderApp` initializes the `YoutubeDL` binary environment and schedules the `StreamRefresherWorker`. `MainActivity` sets up the Compose `AppNavigation`. A splash screen (`splash.html` via WebView) hides startup latency while `MusicViewModel` triggers database syncs, loads genre feeds, and refreshes background recommendations.
+- User flow from opening the app to using features:
+  - Onboarding (if first launch): User selects favorite genres and artists (`GenreSelectionScreen`).
+  - Home: User lands on `HomeScreen`, sees personalized feeds.
+  - Search/Library: User can search InnerTube (`SearchScreen`) or view downloaded/liked songs (`LibraryScreen`).
+  - Player: Tapping a song opens the `MiniPlayer` persistently at the bottom, which expands into `FullScreenPlayer` with lyrics, queue management, and visualizers.
+- Background processes:
+  - `StreamRefresherWorker`: Runs periodically (every 15 mins) to proactively re-fetch and cache expiring YouTube stream URLs for recommended and library songs.
+  - `MusicService`: Maintains a foreground service for uninterrupted background audio playback.
+
+5. UI / UX DESIGN
+----------------------------------------
+- Layout structure: The app uses a single Activity (`MainActivity`) hosting Jetpack Compose. Screens are logically separate composables, avoiding Android Fragments entirely.
+- How the interface is built: Jetpack Compose is used exclusively. UI state is hoisted to `MusicViewModel`. Components are modularized (e.g., `MusicCard`, `SwipeableSongRow`, `DnaComponents`).
+- Navigation system: Handled manually via a custom `AppScreen` sealed class and a `BackHandler` stack in `Navigation.kt`, rather than the official Navigation Compose library, allowing for tightly controlled back-stack and state preservation. The design uses a persistent Bottom Navigation Bar and a persistent Mini Player overlay.
+
+6. DATA HANDLING
+----------------------------------------
+- How data is stored:
+  - Local Database: Room SQLite Database (`music_database`) containing tables for `songs`, `playlists`, `play_history`, `favorites`, `stream_cache`, and `lyrics`.
+  - Preferences: SharedPreferences managed via `UserPreferences.kt` (settings, genres, high-end mode state).
+  - Files: Downloaded `.m4a` files are stored in internal app storage (`filesDir/music_downloads`).
+- How data is fetched, processed, and displayed: Network requests use OkHttp. API responses (e.g., from InnerTube client) are parsed from JSON into Kotlin data classes (`VideoItem`), cached via Room if necessary, and then emitted to the UI via Kotlin Coroutines `StateFlow`.
+
+7. DEPENDENCIES
+----------------------------------------
+- Libraries and frameworks used:
+  - Jetpack Compose (UI framework)
+  - Kotlin Coroutines & Flow (Asynchronous programming)
+  - Room (SQLite object mapping)
+  - Media3 / ExoPlayer (Audio playback and media sessions)
+  - WorkManager (Background task scheduling)
+  - OkHttp (HTTP networking)
+  - Coil (Image loading and caching)
+  - youtubedl-android (JunkFood02 fork) (YouTube audio extraction)
+  - Palette KTX (Color extraction from album art)
+
+8. INTEGRATIONS
+----------------------------------------
+- External APIs or services used:
+  - YouTube InnerTube API (primary source for search, metadata, and streams)
+  - Piped / Invidious APIs (fallback instances managed by `InstanceRegistry`)
+  - Last.fm API (for similar track recommendations via `LastFmClient`)
+  - LrcLib / KuGou (for fetching time-synced `.lrc` lyrics)
+  - Remote Config (fetches a `config.json` from GitHub Pages for dynamic API keys).
+
+9. PERFORMANCE & OPTIMIZATION
+----------------------------------------
+- How efficient the app is: The app is heavily optimized for fast UI rendering. Heavy database operations and network calls are strictly confined to `Dispatchers.IO`. Coil handles aggressive image caching to reduce bandwidth.
+- Bottlenecks or improvements:
+  - High-End Mode: Actively pre-fetches up to 3 upcoming track stream URLs to guarantee gapless playback, trading network bandwidth for zero buffering latency.
+  - Lazy Grids/Rows: The `HomeScreen` and library lists use `LazyRow` and `LazyColumn` for efficient recycling of Compose nodes.
+  - `InstanceRegistry` checks multiple Piped/Invidious instances concurrently using `raceInstances` to find the fastest responding node.
+
+10. SECURITY
+----------------------------------------
+- How user data is handled: All user data (history, libraries, playlists) is stored locally on the device via Room and SharedPreferences. There is no central user account or cloud telemetry.
+- Potential vulnerabilities: The app parses raw JSON from various third-party, community-hosted instances (Piped/Invidious) which could theoretically inject malformed data if compromised, though standard JSON parsing mitigates execution risks.
+
+11. BUILD & DEPLOYMENT
+----------------------------------------
+- How the app is compiled and built: Built using Gradle (Kotlin DSL). It uses Android SDK 34 as the target.
+- Requirements to run it: Minimum SDK 24 (Android 7.0). Requires `INTERNET` and `FOREGROUND_SERVICE` permissions. A specific Gradle fix (`jniLibs { useLegacyPackaging = true }`) is required to correctly package the YoutubeDL binaries for specific architectures (armeabi-v7a, arm64-v8a).
+
+
+12. FULL FILE-BY-FILE BREAKDOWN
+----------------------------------------
+- app/build.gradle.kts: The main module build script. Configures Android SDK versions, Jetpack Compose, enabling legacy JNI packaging (crucial for YoutubeDL), and declares all project dependencies.
+- app/src/main/AndroidManifest.xml: The core Android manifest declaring app permissions (Internet, Foreground Services, Audio), the Application class, and registering the MainActivity and MusicService.
+- app/src/main/java/com/example/musicdownloader/AppLogger.kt: Centralized logging utility that writes logs to memory so they can be displayed in the LogConsoleOverlay.
+- app/src/main/java/com/example/musicdownloader/CookieManager.kt: Manages YouTube session cookies required for bypassing bot-protection on specific API routes.
+- app/src/main/java/com/example/musicdownloader/InnerTubeClient.kt: Custom OkHttp client implementation interacting directly with YouTube's internal APIs (InnerTube) for searching and fetching metadata without official API keys.
+- app/src/main/java/com/example/musicdownloader/InstanceRegistry.kt: Utility that races and caches responsive Piped and Invidious API instances to ensure reliable stream fetching.
+- app/src/main/java/com/example/musicdownloader/LogConsoleOverlay.kt: A developer UI overlay displaying live AppLogger events within the app.
+- app/src/main/java/com/example/musicdownloader/MainActivity.kt: The single Activity entry point. Configures the system UI, requests permissions, and hosts the Jetpack Compose AppNavigation root.
+- app/src/main/java/com/example/musicdownloader/MiniPlayer.kt: Compose UI for the persistent bottom mini-player showing current song and playback controls.
+- app/src/main/java/com/example/musicdownloader/MusicControllerManager.kt: A singleton managing connection to the MusicService via MediaController. Handles playback controls, queue management, and triggering Smart Shuffle logic.
+- app/src/main/java/com/example/musicdownloader/MusicDownloaderApp.kt: Custom Application class initializing YoutubeDL, configuring Coil image caching, scheduling the StreamRefresherWorker, and loading remote configs on startup.
+- app/src/main/java/com/example/musicdownloader/MusicRepository.kt: Central data hub. Interfaces between the network clients (InnerTube), the local Room database, and the ViewModels to fetch, cache, and filter music data and stream URLs.
+- app/src/main/java/com/example/musicdownloader/MusicService.kt: Foreground service extending MediaSessionService. Configures Media3 ExoPlayer, handles audio focus, and defines custom commands (PLAY_STREAM) for gapless background playback.
+- app/src/main/java/com/example/musicdownloader/MusicViewModel.kt: The central ViewModel managing UI state, holding references to repositories, handling user intent (play, download, seek), and exposing data to the UI via StateFlow.
+- app/src/main/java/com/example/musicdownloader/NetworkUtils.kt: Utility class holding global network configurations like common User-Agent strings.
+- app/src/main/java/com/example/musicdownloader/PipedClient.kt: Fallback network client designed to fetch stream URLs using Piped API instances.
+- app/src/main/java/com/example/musicdownloader/StreamInfo.kt: Data class representing an expiring media stream URL.
+- app/src/main/java/com/example/musicdownloader/UserPreferences.kt: Handles saving and retrieving user settings (genres, artists, modes) using SharedPreferences.
+- app/src/main/java/com/example/musicdownloader/YoutubeClient.kt: Wrapper around the yt-dlp binary to handle direct downloading and extraction of audio tracks to local storage.
+- app/src/main/java/com/example/musicdownloader/data/AppDatabase.kt: Room Database definition class uniting all DAOs and Entities.
+- app/src/main/java/com/example/musicdownloader/data/CompressionManager.kt: Utility class to compress local audio files to save disk space.
+- app/src/main/java/com/example/musicdownloader/data/FavoriteDao.kt: Data Access Object for managing liked songs.
+- app/src/main/java/com/example/musicdownloader/data/FavoriteSong.kt: Entity class representing a user's liked song.
+- app/src/main/java/com/example/musicdownloader/data/LyricsDao.kt: Data Access Object for offline lyrics retrieval.
+- app/src/main/java/com/example/musicdownloader/data/LyricsEntity.kt: Entity representing cached synchronized lyrics text.
+- app/src/main/java/com/example/musicdownloader/data/PlayHistory.kt: Entity class recording when a user played a specific song.
+- app/src/main/java/com/example/musicdownloader/data/PlayHistoryDao.kt: Data Access Object for querying user playback history and determining top artists.
+- app/src/main/java/com/example/musicdownloader/data/Playlist.kt: Entity class representing a user-created playlist.
+- app/src/main/java/com/example/musicdownloader/data/PlaylistDao.kt: Data Access Object managing playlists and their cross-reference entries.
+- app/src/main/java/com/example/musicdownloader/data/PlaylistEntry.kt: Cross-reference entity mapping Songs to Playlists.
+- app/src/main/java/com/example/musicdownloader/data/Song.kt: Entity class representing a downloaded song in the local library.
+- app/src/main/java/com/example/musicdownloader/data/SongDao.kt: Data Access Object for CRUD operations on downloaded songs.
+- app/src/main/java/com/example/musicdownloader/data/StreamCache.kt: Entity storing resolved stream URLs and their expiration timestamps.
+- app/src/main/java/com/example/musicdownloader/data/StreamCacheDao.kt: Data Access Object for inserting and retrieving cached stream URLs.
+- app/src/main/java/com/example/musicdownloader/data/StreamSong.kt: Entity class representing cached metadata for streaming-only songs.
+- app/src/main/java/com/example/musicdownloader/data/StreamSongDao.kt: Data Access Object for managing recommended and streaming-only tracks.
+- app/src/main/java/com/example/musicdownloader/lyrics/KuGouLyricsProvider.kt: Implementation fetching lyrics from KuGou as a fallback.
+- app/src/main/java/com/example/musicdownloader/lyrics/LrcLibLyricsProvider.kt: Implementation fetching lyrics from the LrcLib API.
+- app/src/main/java/com/example/musicdownloader/lyrics/LyricsEntry.kt: Data class representing a single timestamped line of lyrics.
+- app/src/main/java/com/example/musicdownloader/lyrics/LyricsHelper.kt: Central controller orchestrating the fetching and synchronization of lyrics.
+- app/src/main/java/com/example/musicdownloader/lyrics/LyricsProvider.kt: Interface definition for lyrics source implementations.
+- app/src/main/java/com/example/musicdownloader/lyrics/LyricsUtils.kt: Utility functions for parsing standard .lrc file formats.
+- app/src/main/java/com/example/musicdownloader/ui/ActiveDownloadsScreen.kt: Specific detailed view of currently active download progress.
+- app/src/main/java/com/example/musicdownloader/ui/AddToPlaylistSheet.kt: A modal bottom sheet UI for adding a song to a playlist.
+- app/src/main/java/com/example/musicdownloader/ui/ArtistDetailScreen.kt: Compose UI showing all songs from a specific artist.
+- app/src/main/java/com/example/musicdownloader/ui/ArtistsScreen.kt: Compose UI grouping local library songs by Artist.
+- app/src/main/java/com/example/musicdownloader/ui/CompressionScreen.kt: Compose UI allowing users to batch compress downloaded audio files.
+- app/src/main/java/com/example/musicdownloader/ui/CookieDialog.kt: Compose dialog allowing users to input raw YouTube cookies to bypass API restrictions.
+- app/src/main/java/com/example/musicdownloader/ui/DnaComponents.kt: A collection of branded, reusable UI widgets unique to the application's aesthetic.
+- app/src/main/java/com/example/musicdownloader/ui/DownloadDashboard.kt: Compose UI showing active and completed download tasks.
+- app/src/main/java/com/example/musicdownloader/ui/EditMetadataDialog.kt: Compose dialog for modifying local ID3/database metadata of downloaded songs.
+- app/src/main/java/com/example/musicdownloader/ui/FullScreenPlayer.kt: The expansive player UI featuring album art, lyrics toggles, queue management, and visualizers.
+- app/src/main/java/com/example/musicdownloader/ui/GenreSelectionScreen.kt: Onboarding UI where users input their favorite genres and artists to seed recommendations.
+- app/src/main/java/com/example/musicdownloader/ui/HomeScreen.kt: Compose UI for the main discovery feed, featuring horizontal scrolling lists for Made for You and Genres.
+- app/src/main/java/com/example/musicdownloader/ui/IdentifyScreen.kt: An unused or placeholder screen intended for audio recognition features.
+- app/src/main/java/com/example/musicdownloader/ui/InfoScreen.kt: An about/credits screen for the application.
+- app/src/main/java/com/example/musicdownloader/ui/LibraryScreen.kt: Compose UI displaying user's local downloaded tracks and links to playlists/favorites.
+- app/src/main/java/com/example/musicdownloader/ui/LikedSongsScreen.kt: Compose UI listing dynamically sorted favorited tracks.
+- app/src/main/java/com/example/musicdownloader/ui/Lyrics.kt: Compose component that renders scrollable, synchronized lyrics dynamically highlighting the active line.
+- app/src/main/java/com/example/musicdownloader/ui/MusicRowItem.kt: A reusable Compose component rendering a standard list item for a song.
+- app/src/main/java/com/example/musicdownloader/ui/Navigation.kt: Defines the app's routing mechanism, bottom navigation bar, and screen state logic.
+- app/src/main/java/com/example/musicdownloader/ui/PlaylistScreen.kt: Compose UI displaying all user-created playlists.
+- app/src/main/java/com/example/musicdownloader/ui/RealtimeVisualizer.kt: A custom Compose canvas drawing audio waveforms synchronized to ExoPlayer audio session IDs.
+- app/src/main/java/com/example/musicdownloader/ui/SearchScreen.kt: Compose UI allowing users to search the InnerTube API for tracks or albums/playlists.
+- app/src/main/java/com/example/musicdownloader/ui/SettingsScreen.kt: Compose UI for app preferences, high-end mode toggling, and developer options.
+- app/src/main/java/com/example/musicdownloader/ui/SkeletonLoader.kt: Provides shimmering placeholder UI components for loading states.
+- app/src/main/java/com/example/musicdownloader/ui/SwipeableSongRow.kt: A MusicRowItem variant supporting swipe gestures for quick actions (like delete).
+- app/src/main/java/com/example/musicdownloader/ui/Theme.kt: Defines the app's dark 'Tech Vibe' Material Theme colors, typography, and shapes.
+- app/src/main/java/com/example/musicdownloader/utils/DnaAnalyzer.kt: Utility used to extract dominant colors from album artwork for dynamic UI theming.
+- app/src/main/java/com/example/musicdownloader/utils/HapticUtils.kt: Provides standardized methods for triggering device vibration/haptic feedback on UI interactions.
+- app/src/main/java/com/example/musicdownloader/utils/LastFmClient.kt: Network client responsible for interacting with the Last.fm API.
+- app/src/main/java/com/example/musicdownloader/utils/RemoteConfigClient.kt: Fetches dynamic configuration JSONs from a remote GitHub Pages endpoint to retrieve API keys securely.
+- app/src/main/java/com/example/musicdownloader/utils/SmartShuffleManager.kt: Core algorithmic class evaluating history and fetching Last.fm API similar tracks to pick contextually relevant next songs.
+- app/src/main/java/com/example/musicdownloader/workers/MusicDownloadWorker.kt: A CoroutineWorker executing long-running yt-dlp audio download processes reliably in the background.
+- app/src/main/java/com/example/musicdownloader/workers/StreamRefresherWorker.kt: A CoroutineWorker running periodically to aggressively pre-fetch and cache expiring YouTube stream URLs.
+- app/src/main/res/drawable/dtech_logo.jpg: The main graphical logo used throughout the application branding.
+- app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml: Adaptive launcher icon definition for Android 8.0+.
+- app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml: Round adaptive launcher icon variant.
+- app/src/main/res/values/strings.xml: Localization file containing hardcoded text strings used in the app.
+- app/src/main/res/values/themes.xml: Base Android XML theme definitions required for app startup before Compose takes over.
+- app/src/main/res/xml/backup_rules.xml: Configuration specifying which files Android Auto-Backup should include/exclude.
+- app/src/main/res/xml/data_extraction_rules.xml: Android 12+ rules defining what app data can be extracted via ADB.
+- app/src/test/java/com/example/musicdownloader/StreamInfoTest.kt: Unit tests ensuring proper creation and parsing of stream metadata models.
+- app/src/test/java/com/example/musicdownloader/utils/DnaAnalyzerTest.kt: Unit tests verifying color extraction logic.
+- build.gradle.kts: Root Gradle build script defining repository management and global plugin versions.
+- config.json: A remote configuration file format defining API keys and base URLs (like Last.fm).
+- gradle.properties: Defines Gradle environment properties, including AndroidX flags and memory settings.
+- settings.gradle.kts: Gradle settings file specifying the root project name and including the ':app' module.

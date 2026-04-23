@@ -1,0 +1,294 @@
+FULL SYSTEM REPORT
+==================================================
+
+SECTION 1 — PROJECT STRUCTURE
+--------------------------------------------------
+1. Programming language(s) used:
+   - Primary: Kotlin (100% of source code in `app/src/main/java`)
+   - Build Scripts: Kotlin DSL (`build.gradle.kts`)
+
+2. Build system configuration:
+   - Gradle Version: 8.x (Implied by .kts usage and `distributionUrl` in typical setups)
+   - Compile SDK: 34 (Android 14)
+   - Target SDK: 34 (Android 14)
+   - Min SDK: 24 (Android 7.0)
+   - Namespace: `com.example.musicdownloader`
+   - Application ID: `com.dtech.music`
+
+3. Dependency list (Key Libraries):
+   - Media3 (ExoPlayer): Version 1.2.1
+     - `androidx.media3:media3-exoplayer`
+     - `androidx.media3:media3-exoplayer-hls`
+     - `androidx.media3:media3-ui`
+     - `androidx.media3:media3-session`
+     - `androidx.media3:media3-datasource-okhttp`
+   - Networking:
+     - OkHttp: 4.12.0 (`com.squareup.okhttp3:okhttp`)
+     - Retrofit: Not used (Manual JSON parsing via `org.json.JSONObject`)
+   - YoutubeDL-Android: Version 0.18.1 (`io.github.junkfood02.youtubedl-android:library`)
+   - FFmpeg: Version 0.18.1 (`io.github.junkfood02.youtubedl-android:ffmpeg`)
+   - Image Loading: Coil (`io.coil-kt:coil-compose:2.5.0`)
+   - Database: Room 2.6.1 (`androidx.room:room-runtime`)
+   - Async: Kotlin Coroutines 1.7.3 (`org.jetbrains.kotlinx:kotlinx-coroutines-android`)
+   - WorkManager: 2.9.0 (`androidx.work:work-runtime-ktx`)
+
+   Native Binaries / .so files:
+   - `libyoutubedl_android.so`: JNI bridge for executing the python binary.
+   - `libffmpeg.so`: Bundled FFmpeg binary (via `io.github.junkfood02.youtubedl-android:ffmpeg`).
+   - Python Runtime: Embedded within `youtubedl-android` (Python 3.8+ zip).
+
+4. Whether this app uses:
+   - yt-dlp binary: YES (bundled via `youtubedl-android` library).
+   - Python + Chaquopy: NO (Uses `youtubedl-android`'s embedded Python zip, not Chaquopy).
+   - FFmpeg: YES (bundled via `youtubedl-android` library).
+   - Native streaming tools: NO (Relies on ExoPlayer for playback).
+
+5. Where the yt-dlp binary is stored and how it is executed:
+   - Storage: The `youtubedl-android` library unpacks the `yt-dlp` executable (a Python zipapp) and the Python runtime (zip) to the app's private files directory (`/data/user/0/com.dtech.music/files/youtubedl-android/`).
+   - Execution: It is executed via JNI (`libyoutubedl_android.so`) which forks a new process to run the Python interpreter against the `yt-dlp` script.
+
+6. Exact command used to execute yt-dlp (Streaming):
+   - Command: `YoutubeDL.getInstance().execute(request)`
+   - Flags (Streaming):
+     - `-g` (Get URL only)
+     - `-f bestaudio[ext=m4a]` (Format selection)
+     - `--no-warnings`
+     - `--force-ipv4`
+     - `--cookies <path_to_cookies.txt>` (if available)
+
+   - Flags (Downloading):
+     - `-f bestaudio[ext=m4a]/bestaudio/best`
+     - `-S +size,+br` (Sort by size and bitrate)
+     - `--no-check-certificate`
+     - `--extractor-args youtube:player_client=android,ios`
+     - `-o <absolute_path_to_output>`
+     - `--force-ipv4`
+     - `--no-warnings`
+     - `--cookies <path_to_cookies.txt>`
+
+7. How process output is captured and parsed:
+   - Mechanism: The `YoutubeDL` library captures `stdout` and `stderr` from the spawned process.
+   - Parsing (Streaming): The entire output string is returned, trimmed, and used as the stream URL.
+   - Parsing (Downloading): A callback lambda is used. `stdout` lines are regex-matched against:
+     `\[download\]\s+(\d+\.\d+)%\s+of\s+([~\d\.]+\w+)(?:\s+at\s+([\d\.]+\w+/s))?(?:\s+ETA\s+([\d:]+))?`
+     to extract progress percentage, total size, speed, and ETA.
+
+SECTION 2 — STREAMING PIPELINE
+--------------------------------------------------
+1. Full flow from Search to Playback:
+   A. User Search:
+      - `MusicViewModel.search(query)` called.
+      - `MusicRepository.searchVideos(query)` called.
+      - Priority 1: `InnerTubeClient.search(query)` (Manual JSON POST to `youtubei.googleapis.com`).
+        - Uses "WEB" client context.
+        - Parses JSON response on `Dispatchers.IO`.
+      - Priority 2 (Fallback): `YoutubeClient.searchVideos` (Spawns `yt-dlp` process with `ytmusicsearch5:`).
+      - Results returned to UI via `MusicUiState`.
+
+   B. Video Selection:
+      - User clicks item -> `MusicViewModel.playStream(video)` called.
+      - Checks for local file in `files/music_downloads/`.
+      - If local file exists: Plays immediately.
+
+   C. URL Extraction (if not local):
+      - `YoutubeClient.getStreamUrl(url)` called on `Dispatchers.IO`.
+      - Constructs `YoutubeDLRequest` with `-g -f bestaudio[ext=m4a]`.
+      - Spawns `yt-dlp` process (BLOCKING operation, approx 2-5 seconds).
+      - Returns raw URL string.
+
+   D. ExoPlayer Preparation:
+      - `MusicControllerManager.playMedia(mediaItem)` called on Main Thread.
+      - Sends custom command `PLAY_STREAM` to `MusicService`.
+      - `MusicService` constructs `MediaItem` with metadata.
+      - `DefaultMediaSourceFactory` creates `MediaSource`.
+
+   E. Playback Start:
+      - `player.prepare()` and `player.play()` called.
+      - `OkHttpDataSource` (via `InnerTubeClient.client`) connects to the extracted URL.
+      - Buffering begins.
+
+2. Latency Analysis:
+   - **Critical Bottleneck**: `YoutubeClient.getStreamUrl`. Spawning a Python process for *every* play request adds 2-5s of unavoidable latency.
+   - **Blocking Parts**: The `YoutubeDL.execute` call is blocking on the IO thread.
+   - **Main Thread**: `MusicControllerManager` and `MusicService` callbacks run on Main, but they delegate heavy lifting to background threads or ExoPlayer internal threads.
+   - **Background Threads**: `YoutubeDL` execution and `InnerTubeClient` network calls run on `Dispatchers.IO`.
+
+3. Caching:
+   - Stream URLs: **NO**. `YoutubeClient.getStreamUrl` is called fresh for every playback.
+   - Expiry Timestamps: **NO**.
+   - Metadata: **YES**. `MusicRepository` has a `searchCache` (ConcurrentHashMap) for search results, valid for 24 hours (based on `UserPreferences.lastGenreRefreshTime` check).
+   - Storage: In-Memory (`ConcurrentHashMap`) for search results; Room Database for Library/History.
+
+4. Buffering Configuration:
+   - `DefaultLoadControl` in `MusicService.kt`:
+     - Min Buffer: 30,000 ms (30s)
+     - Max Buffer: 30,000 ms (30s)
+     - Buffer for Playback: 500 ms (Aggressive start)
+     - Rebuffer: 1,000 ms
+
+5. Is player prepared before play()?
+   - Yes, `player.prepare()` is explicitly called in `MusicService`'s `onCustomCommand` handler immediately before `player.play()`.
+
+6. Is HTTP client reused?
+   - **YES**. `InnerTubeClient.client` (OkHttpClient singleton) is shared for `InnerTube` API calls and `OkHttpDataSource` (ExoPlayer).
+   - **NO** for `yt-dlp`: Each `yt-dlp` process spawns its own internal Python network stack.
+
+7. Is there prefetching of next track?
+   - **NO**. There is no logic in `MusicViewModel` or `MusicService` to pre-fetch the stream URL for the next item in the queue.
+
+SECTION 3 — PERFORMANCE ANALYSIS
+--------------------------------------------------
+1. Performance Bottlenecks:
+   - **Process Spawning**: Every `yt-dlp` execution (search fallback, stream extraction, download) forks a new process and initializes the Python runtime. This is CPU and I/O intensive.
+   - **Main Thread Work**: `MusicRepository.importLocalSongs` iterates `MediaStore` cursor. While on IO dispatcher, the sheer volume of allocations for large libraries can cause GC pressure.
+
+2. Unnecessary Object Recreation:
+   - `YoutubeDLRequest`: Created fresh for every call.
+   - `GenreFeed` aggregation: `MusicRepository.fetchGenreFeeds` creates new lists every time it refreshes.
+
+3. Blocking IO:
+   - `YoutubeDL.execute`: Blocks the calling thread (handled via `Dispatchers.IO`, but consumes a thread).
+   - `AppDatabase` queries: Mostly async (Flow), but `fixUnknownSongs` calls `getAllSongsSync` which could block if run on main (currently on IO).
+
+4. Expensive Process Spawning:
+   - **HIGH SEVERITY**. `YoutubeClient.getStreamUrl` spawns a full Python environment. This is the single biggest performance drag.
+
+5. Memory Leaks:
+   - `MusicRepository.searchCache`: `ConcurrentHashMap` grows indefinitely. No eviction policy based on size, only a "refresh" trigger. Long sessions will bloat memory.
+   - `MusicService.serviceScope`: Properly cancelled in `onDestroy`, but if Service leaks (e.g. via Context ref in a singleton), scope leaks too.
+
+6. Potential ANR Risks:
+   - `MusicRepository.importLocalSongs`: If the user has 10,000+ songs, mapping Cursor data to objects might take time. It's on `Dispatchers.IO`, reducing ANR risk, but could hang the "Scanning..." UI state.
+
+7. Battery Inefficiencies:
+   - Repeatedly spinning up the Python interpreter drains battery significantly more than a native Java/Kotlin HTTP request.
+   - Aggressive buffering (30s) is good for playback stability but keeps the radio active longer if the user skips tracks frequently.
+
+Estimated Startup Timing Breakdown (Playback):
+- yt-dlp process spawn & Python init: ~1500ms
+- Extraction logic (Python script): ~1500ms
+- Network handshake (InnerTube via Python): ~1000ms
+- Player prepare time: ~200ms
+- **Total Time to First Frame**: ~4.2 seconds (vs ~0.5s for native implementation).
+
+SECTION 4 — NETWORKING
+--------------------------------------------------
+1. Networking Layers:
+   - `OkHttp` (Kotlin): Used for InnerTube API and ExoPlayer media loading.
+   - `Python` internal networking (urllib/requests): Used inside `yt-dlp` process.
+
+2. HTTP/2 Enabled?
+   - OkHttp: **YES** (Default behavior).
+   - yt-dlp: **Likely NO** (Standard Python `urllib` often defaults to HTTP/1.1 unless specifically configured with newer requests libs, though yt-dlp optimizes this internally).
+
+3. Connection Reuse:
+   - `InnerTubeClient` / ExoPlayer: **YES** (Connection pooling enabled).
+   - yt-dlp: **NO**. Each process is ephemeral; no connection pooling between requests.
+
+4. DNS Resolution:
+   - `InnerTubeClient` uses `IPv4Dns` (custom object, likely implementing `Dns` interface to filter A records).
+   - `yt-dlp` forced via `--force-ipv4`.
+
+5. IPv6 Forced?
+   - **NO**. Explicitly disabled (`--force-ipv4` in yt-dlp, `IPv4Dns` in OkHttp).
+
+6. Unnecessary TLS Reinitialization:
+   - **YES**. Every `yt-dlp` call performs a full TLS handshake since the process dies after execution.
+
+SECTION 5 — SCALABILITY & ARCHITECTURE
+--------------------------------------------------
+1. Architecture Grade: **B-**
+   - **Pros**: Clean MVVM, usage of Repository pattern, structured Room DB.
+   - **Cons**: heavy reliance on `yt-dlp` binary for core functionality (streaming) limits scalability and performance.
+
+2. Separation of Concerns:
+   - **Good**. `MusicService` handles playback, `MusicViewModel` handles UI state, `MusicRepository` handles data.
+   - **Leak**: `YoutubeClient` exposes UI-centric `DownloadStatus` flows directly.
+
+3. Testability:
+   - **Medium**. `MusicViewModel` is testable. `YoutubeClient` is hard to test because it relies on an external binary and network.
+
+4. Risk Areas:
+   - **YouTube API Changes**: If `yt-dlp` breaks (which happens often), the app stops working until the library is updated.
+   - **InnerTube Structure Changes**: `InnerTubeClient` uses manual JSON parsing. If Google changes the key names (e.g., `contents` -> `renderers`), search fails.
+
+5. Coupling:
+   - `yt-dlp` is loosely coupled via `YoutubeClient` wrapper, but the *logic* of the app assumes its presence.
+
+6. Swap Extraction Engine?
+   - **Easy**. `YoutubeClient` interface is simple (`getStreamUrl`, `searchVideos`). You could swap `yt-dlp` for a native Kotlin extractor (like NewPipeExtractor) without changing the ViewModel/UI.
+
+SECTION 6 — SECURITY & RISK
+--------------------------------------------------
+1. Risks of using yt-dlp binary:
+   - **Binaries in APK**: Flagged by some antivirus or Play Protect as "Potentially Unwanted Program" (PUP) due to downloader capabilities.
+   - **Size**: Increases APK size significantly (~30MB+).
+
+2. Play Store Policy Risks:
+   - **HIGH**. Downloading YouTube content is a direct violation of YouTube ToS and Google Play Developer Program Policies (Section: Device and Network Abuse / Intellectual Property).
+   - **Background Play**: Also a violation for non-Premium features.
+   - **Rejection Probability**: Near 100% if detected.
+
+3. Reverse Engineering:
+   - **High Exposure**. APK contains Python scripts which are easily extracted. `InnerTubeClient` API Key is hardcoded.
+
+4. Hardcoded Secrets:
+   - **YES**. `API_KEY` in `InnerTubeClient.kt`.
+
+5. Binary Extraction:
+   - **Yes**. `libyoutubedl_android.so` and the zip payload can be extracted and run on other devices.
+
+SECTION 7 — IMPROVEMENT PLAN
+--------------------------------------------------
+1. Top 10 Performance Improvements:
+   1. **Replace `yt-dlp` for Streaming**: Use a native Kotlin extractor (e.g., ported from NewPipe or LibTube). Eliminates process spawning. Impact: ~3s faster start.
+   2. **Implement Stream URL Caching**: Cache `getStreamUrl` results in memory (LRU Cache) for 1-2 hours. Impact: Instant replay/re-seek.
+   3. **Pre-fetch Next Track**: Resolve the stream URL for the next item in the queue 10s before the current one ends. Impact: Gapless playback.
+   4. **Reuse yt-dlp Instance (Impossible)**: Since you can't, switch to **NewPipeExtractor** or similar.
+   5. **Enable Parallel Downloads**: Allow `MusicDownloadWorker` to run multiple jobs (currently serialized via single-threaded executor usually, unless configured).
+   6. **Optimize `searchCache`**: Use `LruCache` instead of `ConcurrentHashMap` to prevent OOM.
+   7. **Database Indexing**: Ensure `songId` in Room is indexed (it is by virtue of being PK).
+   8. **Reduce Image Sizes**: `Coil` is used, but ensure `crossfade` and `resize` are used to avoid loading max-res thumbnails.
+   9. **Process Priority**: If keeping `yt-dlp`, ensure the thread has `THREAD_PRIORITY_URGENT_AUDIO`.
+   10. **Lazy Database Initialization**: `AppDatabase` is initialized on access, which is good.
+
+2. Code-Level Changes (Stream Caching):
+   ```kotlin
+   // In YoutubeClient.kt
+   private val streamCache = LruCache<String, StreamInfo>(50) // Cache 50 URLs
+
+   suspend fun getStreamUrl(context: Context, url: String): StreamInfo {
+       streamCache.get(url)?.let { return it }
+       // ... fetch ...
+       streamCache.put(url, result)
+       return result
+   }
+   ```
+
+3. Architectural Refactor:
+   - Create an `Extractor` interface.
+   - Implement `YtDlpExtractor` and `NativeExtractor`.
+   - Inject `Extractor` into `MusicRepository`.
+   - Allows A/B testing or fallback if one fails.
+
+4. Safe Optimizations:
+   - Use `InnerTubeClient` for *everything* possible (Metadata, Search, Next Video) to avoid `yt-dlp` overhead.
+
+5. Advanced Optimizations (Max Speed):
+   - **HTTP pipelining** (not supported by all servers).
+   - **Manifest Parsing**: Parse the HLS manifest (`m3u8`) manually in Kotlin to select the track, skipping `yt-dlp`'s selection logic.
+
+6. "Debug Control Panel":
+   - Add a hidden "Developer Options" screen (e.g., tap version 5 times).
+   - Toggles: "Force IPv4", "Use yt-dlp/Native", "Show logs", "Clear Cache".
+
+SECTION 8 — FINAL SUMMARY
+--------------------------------------------------
+Current Architecture Grade: **B-**
+Startup Speed Potential: **Low** (due to Python overhead).
+Stability Rating: **Medium** (Dependent on `yt-dlp` library updates).
+Long-term Maintainability: **Medium** (Clean code, but fragile dependency on binary).
+Production Ready? **No**. The reliance on spawning a Python process for every playback event makes the user experience sluggish (3-5s load times) compared to standard native players.
+
+Recommendation:
+The app is a solid Proof of Concept with clean MVVM structure. However, to become "Production Grade", you MUST replace the `yt-dlp` streaming implementation with a native Kotlin/Java equivalent (like NewPipeExtractor) to remove the 3-second latency tax on every song start. `yt-dlp` should be reserved *only* for file downloading where latency matters less.

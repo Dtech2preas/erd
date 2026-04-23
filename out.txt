@@ -1,0 +1,46 @@
+{
+  "responseContext": {
+    "visitorData": "Cgt3UDNEUUk1YVZudyjisaXPBg%3D%3D",
+    "serviceTrackingParams": [
+      {
+        "service": "GUIDED_HELP",
+        "params": [
+          {
+            "key": "context",
+            "value": "yt_web_search"
+          },
+          {
+            "key": "logged_in",
+            "value": "0"
+          }
+        ]
+      },
+      {
+        "service": "GFEEDBACK",
+        "params": [
+          {
+            "key": "has_unlimited_entitlement",
+            "value": "False"
+          },
+          {
+            "key": "has_premium_lite_entitlement",
+            "value": "False"
+          },
+          {
+            "key": "logged_in",
+            "value": "0"
+          },
+          {
+            "key": "visitor_data",
+            "value": "Cgt3UDNEUUk1YVZudyjisaXPBg%3D%3D"
+          }
+        ]
+      },
+      {
+        "service": "CSI",
+        "params": [
+          {
+            "key": "yt_ad",
+            "value": "1"
+          },
+          {

@@ -1,0 +1,462 @@
+{
+  "lockupViewModel": {
+    "contentImage": {
+      "collectionThumbnailViewModel": {
+        "primaryThumbnail": {
+          "thumbnailViewModel": {
+            "image": {
+              "sources": [
+                {
+                  "url": "https://i.ytimg.com/vi/U6R-twDkrcI/hqdefault.jpg?sqp=-oaymwEXCOADEI4CSFryq4qpAwkIARUAAIhCGAE=&rs=AOn4CLAH3euOxxSQgr7tHO7Tca5NgSPqig",
+                  "width": 480,
+                  "height": 270
+                }
+              ]
+            },
+            "overlays": [
+              {
+                "thumbnailOverlayBadgeViewModel": {
+                  "thumbnailBadges": [
+                    {
+                      "thumbnailBadgeViewModel": {
+                        "icon": {
+                          "sources": [
+                            {
+                              "clientResource": {
+                                "imageName": "PLAYLISTS"
+                              }
+                            }
+                          ]
+                        },
+                        "text": "13 videos",
+                        "badgeStyle": "THUMBNAIL_OVERLAY_BADGE_STYLE_DEFAULT",
+                        "backgroundColor": {
+                          "lightTheme": 2630427,
+                          "darkTheme": 2630427
+                        }
+                      }
+                    }
+                  ],
+                  "position": "THUMBNAIL_OVERLAY_BADGE_POSITION_BOTTOM_END"
+                }
+              },
+              {
+                "thumbnailHoverOverlayViewModel": {
+                  "icon": {
+                    "sources": [
+                      {
+                        "clientResource": {
+                          "imageName": "PLAY_ALL"
+                        }
+                      }
+                    ]
+                  },
+                  "text": {
+                    "content": "Play all",
+                    "styleRuns": [
+                      {
+                        "startIndex": 0,
+                        "length": 8
+                      }
+                    ]
+                  },
+                  "style": "THUMBNAIL_HOVER_OVERLAY_STYLE_COVER"
+                }
+              }
+            ],
+            "backgroundColor": {
+              "lightTheme": 4142635,
+              "darkTheme": 4142635
+            }
+          }
+        },
+        "stackColor": {
+          "lightTheme": 12559749,
+          "darkTheme": 9668214
+        }
+      }
+    },
+    "metadata": {
+      "lockupMetadataViewModel": {
+        "title": {
+          "content": "Linkin Park - Meteora (Full Album)"
+        },
+        "metadata": {
+          "contentMetadataViewModel": {
+            "metadataRows": [
+              {
+                "metadataParts": [
+                  {
+                    "text": {
+                      "content": "Linkin Park",
+                      "commandRuns": [
+                        {
+                          "startIndex": 0,
+                          "length": 11,
+                          "onTap": {
+                            "innertubeCommand": {
+                              "clickTrackingParams": "CFMQ0sQMGAAiEwingczhzYKUAxXMkcIBHYITF5YyBnNlYXJjaMoBBOS_6rQ=",
+                              "commandMetadata": {
+                                "webCommandMetadata": {
+                                  "url": "/@LinkinPark",
+                                  "webPageType": "WEB_PAGE_TYPE_CHANNEL",
+                                  "rootVe": 3611,
+                                  "apiUrl": "/youtubei/v1/browse"
+                                }
+                              },
+                              "browseEndpoint": {
+                                "browseId": "UCZU9T1ceaOgwfLRq7OKFU4Q",
+                                "canonicalBaseUrl": "/@LinkinPark"
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "styleRuns": [
+                        {
+                          "startIndex": 0,
+                          "length": 11,
+                          "weightLabel": "FONT_WEIGHT_NORMAL"
+                        },
+                        {
+                          "startIndex": 11,
+                          "styleRunExtensions": {
+                            "styleRunColorMapExtension": {
+                              "colorMap": [
+                                {
+                                  "key": "USER_INTERFACE_THEME_DARK",
+                                  "value": 4289374890
+                                },
+                                {
+                                  "key": "USER_INTERFACE_THEME_LIGHT",
+                                  "value": 4284506208
+                                }
+                              ]
+                            }
+                          }
+                        }
+                      ],
+                      "attachmentRuns": [
+                        {
+                          "startIndex": 11,
+                          "length": 0,
+                          "element": {
+                            "type": {
+                              "imageType": {
+                                "image": {
+                                  "sources": [
+                                    {
+                                      "clientResource": {
+                                        "imageName": "CHECK_CIRCLE_FILLED"
+                                      },
+                                      "width": 14,
+                                      "height": 14
+                                    }
+                                  ]
+                                }
+                              }
+                            },
+                            "properties": {
+                              "layoutProperties": {
+                                "height": {
+                                  "value": 14,
+                                  "unit": "DIMENSION_UNIT_POINT"
+                                },
+                                "width": {
+                                  "value": 14,
+                                  "unit": "DIMENSION_UNIT_POINT"
+                                },
+                                "margin": {
+                                  "left": {
+                                    "value": 4,
+                                    "unit": "DIMENSION_UNIT_POINT"
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "alignment": "ALIGNMENT_VERTICAL_CENTER"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "text": {
+                      "content": "Playlist",
+                      "commandRuns": [
+                        {
+                          "startIndex": 0,
+                          "length": 8,
+                          "onTap": {
+                            "innertubeCommand": {
+                              "clickTrackingParams": "CFMQ0sQMGAAiEwingczhzYKUAxXMkcIBHYITF5YyBnNlYXJjaMoBBOS_6rQ=",
+                              "commandMetadata": {
+                                "webCommandMetadata": {
+                                  "url": "/@LinkinPark",
+                                  "webPageType": "WEB_PAGE_TYPE_CHANNEL",
+                                  "rootVe": 3611,
+                                  "apiUrl": "/youtubei/v1/browse"
+                                }
+                              },
+                              "browseEndpoint": {
+                                "browseId": "UCZU9T1ceaOgwfLRq7OKFU4Q",
+                                "canonicalBaseUrl": "/@LinkinPark"
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "styleRuns": [
+                        {
+                          "startIndex": 0,
+                          "length": 8,
+                          "weightLabel": "FONT_WEIGHT_NORMAL"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "isSpacerRow": true
+              },
+              {
+                "metadataParts": [
+                  {
+                    "text": {
+                      "content": "Foreword - Linkin Park (Meteora) \u00b7 0:14",
+                      "commandRuns": [
+                        {
+                          "startIndex": 0,
+                          "length": 40,
+                          "onTap": {
+                            "innertubeCommand": {
+                              "clickTrackingParams": "CFMQ0sQMGAAiEwingczhzYKUAxXMkcIBHYITF5YyBnNlYXJjaMoBBOS_6rQ=",
+                              "commandMetadata": {
+                                "webCommandMetadata": {
+                                  "url": "/watch?v=U6R-twDkrcI&list=PLlqZM4covn1EbvC_6cuERQ59QaMbPkUyE",
+                                  "webPageType": "WEB_PAGE_TYPE_WATCH",
+                                  "rootVe": 3832
+                                }
+                              },
+                              "watchEndpoint": {
+                                "videoId": "U6R-twDkrcI",
+                                "playlistId": "PLlqZM4covn1EbvC_6cuERQ59QaMbPkUyE",
+                                "loggingContext": {
+                                  "vssLoggingContext": {
+                                    "serializedContextData": "GiJQTGxxWk00Y292bjFFYnZDXzZjdUVSUTU5UWFNYlBrVXlF"
+                                  }
+                                },
+                                "watchEndpointSupportedOnesieConfig": {
+                                  "html5PlaybackOnesieConfig": {
+                                    "commonConfig": {
+                                      "url": "https://rr1---sn-o097znsk.googlevideo.com/initplayback?source=youtube&oeis=1&c=WEB&oad=3200&ovd=3200&oaad=11000&oavd=11000&ocs=700&oewis=1&oputc=1&ofpcc=1&msp=1&odepv=1&id=53a47eb700e4adc2&ip=fda3%3Ae722%3Aac3%3A10%3A66%3Ab11b%3Aa84%3A24e&mt=1776900009&oweuc=&pxtags=Cg4KAnR4Egg1MTc3NDM0OQ&rxtags=Cg4KAnR4Egg1MTc3NDM0OQ%2CCg4KAnR4Egg1MTc3NDM1Mg"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "metadataParts": [
+                  {
+                    "text": {
+                      "content": "Don't Stay - Linkin Park (Meteora) \u00b7 3:08",
+                      "commandRuns": [
+                        {
+                          "startIndex": 0,
+                          "length": 42,
+                          "onTap": {
+                            "innertubeCommand": {
+                              "clickTrackingParams": "CFMQ0sQMGAAiEwingczhzYKUAxXMkcIBHYITF5YyBnNlYXJjaMoBBOS_6rQ=",
+                              "commandMetadata": {
+                                "webCommandMetadata": {
+                                  "url": "/watch?v=oWfGOVWrueo&list=PLlqZM4covn1EbvC_6cuERQ59QaMbPkUyE",
+                                  "webPageType": "WEB_PAGE_TYPE_WATCH",
+                                  "rootVe": 3832
+                                }
+                              },
+                              "watchEndpoint": {
+                                "videoId": "oWfGOVWrueo",
+                                "playlistId": "PLlqZM4covn1EbvC_6cuERQ59QaMbPkUyE",
+                                "loggingContext": {
+                                  "vssLoggingContext": {
+                                    "serializedContextData": "GiJQTGxxWk00Y292bjFFYnZDXzZjdUVSUTU5UWFNYlBrVXlF"
+                                  }
+                                },
+                                "watchEndpointSupportedOnesieConfig": {
+                                  "html5PlaybackOnesieConfig": {
+                                    "commonConfig": {
+                                      "url": "https://rr4---sn-o097znsz.googlevideo.com/initplayback?source=youtube&oeis=1&c=WEB&oad=3200&ovd=3200&oaad=11000&oavd=11000&ocs=700&oewis=1&oputc=1&ofpcc=1&msp=1&odepv=1&id=a167c63955abb9ea&ip=fda3%3Ae722%3Aac3%3A10%3A66%3Ab11b%3Aa84%3A24e&mt=1776900009&oweuc=&pxtags=Cg4KAnR4Egg1MTc3NDM0OQ&rxtags=Cg4KAnR4Egg1MTc3NDM0OQ%2CCg4KAnR4Egg1MTc3NDM1Mg"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "isSpacerRow": true
+              },
+              {
+                "metadataParts": [
+                  {
+                    "text": {
+                      "content": "View full playlist",
+                      "commandRuns": [
+                        {
+                          "startIndex": 0,
+                          "length": 18,
+                          "onTap": {
+                            "innertubeCommand": {
+                              "clickTrackingParams": "CFMQ0sQMGAAiEwingczhzYKUAxXMkcIBHYITF5YyBnNlYXJjaMoBBOS_6rQ=",
+                              "commandMetadata": {
+                                "webCommandMetadata": {
+                                  "url": "/playlist?list=PLlqZM4covn1EbvC_6cuERQ59QaMbPkUyE",
+                                  "webPageType": "WEB_PAGE_TYPE_PLAYLIST",
+                                  "rootVe": 5754,
+                                  "apiUrl": "/youtubei/v1/browse"
+                                }
+                              },
+                              "browseEndpoint": {
+                                "browseId": "VLPLlqZM4covn1EbvC_6cuERQ59QaMbPkUyE"
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "styleRuns": [
+                        {
+                          "startIndex": 0,
+                          "length": 18,
+                          "weightLabel": "FONT_WEIGHT_MEDIUM"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ],
+            "delimiter": " \u2022 "
+          }
+        }
+      }
+    },
+    "contentId": "PLlqZM4covn1EbvC_6cuERQ59QaMbPkUyE",
+    "contentType": "LOCKUP_CONTENT_TYPE_PLAYLIST",
+    "itemPlayback": {
+      "inlinePlayerData": {
+        "onSelect": {
+          "innertubeCommand": {
+            "clickTrackingParams": "CFMQ0sQMGAAiEwingczhzYKUAxXMkcIBHYITF5YyBnNlYXJjaMoBBOS_6rQ=",
+            "commandMetadata": {
+              "webCommandMetadata": {
+                "url": "/watch?v=U6R-twDkrcI&list=PLlqZM4covn1EbvC_6cuERQ59QaMbPkUyE",
+                "webPageType": "WEB_PAGE_TYPE_WATCH",
+                "rootVe": 3832
+              }
+            },
+            "watchEndpoint": {
+              "videoId": "U6R-twDkrcI",
+              "playlistId": "PLlqZM4covn1EbvC_6cuERQ59QaMbPkUyE",
+              "params": "OAI%3D",
+              "loggingContext": {
+                "vssLoggingContext": {
+                  "serializedContextData": "GiJQTGxxWk00Y292bjFFYnZDXzZjdUVSUTU5UWFNYlBrVXlF"
+                }
+              },
+              "watchEndpointSupportedOnesieConfig": {
+                "html5PlaybackOnesieConfig": {
+                  "commonConfig": {
+                    "url": "https://rr1---sn-o097znsk.googlevideo.com/initplayback?source=youtube&oeis=1&c=WEB&oad=3200&ovd=3200&oaad=11000&oavd=11000&ocs=700&oewis=1&oputc=1&ofpcc=1&msp=1&odepv=1&id=53a47eb700e4adc2&ip=fda3%3Ae722%3Aac3%3A10%3A66%3Ab11b%3Aa84%3A24e&mt=1776900009&oweuc=&pxtags=Cg4KAnR4Egg1MTc3NDM0OQ&rxtags=Cg4KAnR4Egg1MTc3NDM0OQ%2CCg4KAnR4Egg1MTc3NDM1Mg"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "onVisible": {
+          "innertubeCommand": {
+            "clickTrackingParams": "CFMQ0sQMGAAiEwingczhzYKUAxXMkcIBHYITF5YyBnNlYXJjaMoBBOS_6rQ=",
+            "commandMetadata": {
+              "webCommandMetadata": {
+                "url": "/watch?v=U6R-twDkrcI&list=PLlqZM4covn1EbvC_6cuERQ59QaMbPkUyE&pp=YAHIAQHwBAD4BACiBhUBhL130yklRfeEgPcGNKJPRoC_Vdw%3D",
+                "webPageType": "WEB_PAGE_TYPE_WATCH",
+                "rootVe": 3832
+              }
+            },
+            "watchEndpoint": {
+              "videoId": "U6R-twDkrcI",
+              "playlistId": "PLlqZM4covn1EbvC_6cuERQ59QaMbPkUyE",
+              "playerParams": "YAHIAQHwBAD4BACiBhUBhL130yklRfeEgPcGNKJPRoC_Vdw%3D",
+              "loggingContext": {
+                "vssLoggingContext": {
+                  "serializedContextData": "GiJQTGxxWk00Y292bjFFYnZDXzZjdUVSUTU5UWFNYlBrVXlF"
+                }
+              },
+              "watchEndpointSupportedOnesieConfig": {
+                "html5PlaybackOnesieConfig": {
+                  "commonConfig": {
+                    "url": "https://rr1---sn-o097znsk.googlevideo.com/initplayback?source=youtube&oeis=1&c=WEB&oad=3200&ovd=3200&oaad=11000&oavd=11000&ocs=700&oewis=1&oputc=1&ofpcc=1&msp=1&odepv=1&id=53a47eb700e4adc2&ip=fda3%3Ae722%3Aac3%3A10%3A66%3Ab11b%3Aa84%3A24e&mt=1776900009&oweuc=&pxtags=Cg4KAnR4Egg1MTc3NDM0OQ&rxtags=Cg4KAnR4Egg1MTc3NDM0OQ%2CCg4KAnR4Egg1MTc3NDM1Mg"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "rendererContext": {
+      "loggingContext": {
+        "loggingDirectives": {
+          "trackingParams": "CFMQ0sQMGAAiEwingczhzYKUAxXMkcIBHYITF5Y=",
+          "visibility": {
+            "types": "12"
+          }
+        }
+      },
+      "commandContext": {
+        "onTap": {
+          "innertubeCommand": {
+            "clickTrackingParams": "CFMQ0sQMGAAiEwingczhzYKUAxXMkcIBHYITF5YyBnNlYXJjaMoBBOS_6rQ=",
+            "commandMetadata": {
+              "webCommandMetadata": {
+                "url": "/watch?v=U6R-twDkrcI&list=PLlqZM4covn1EbvC_6cuERQ59QaMbPkUyE",
+                "webPageType": "WEB_PAGE_TYPE_WATCH",
+                "rootVe": 3832
+              }
+            },
+            "watchEndpoint": {
+              "videoId": "U6R-twDkrcI",
+              "playlistId": "PLlqZM4covn1EbvC_6cuERQ59QaMbPkUyE",
+              "params": "OAI%3D",
+              "loggingContext": {
+                "vssLoggingContext": {
+                  "serializedContextData": "GiJQTGxxWk00Y292bjFFYnZDXzZjdUVSUTU5UWFNYlBrVXlF"
+                }
+              },
+              "watchEndpointSupportedOnesieConfig": {
+                "html5PlaybackOnesieConfig": {
+                  "commonConfig": {
+                    "url": "https://rr1---sn-o097znsk.googlevideo.com/initplayback?source=youtube&oeis=1&c=WEB&oad=3200&ovd=3200&oaad=11000&oavd=11000&ocs=700&oewis=1&oputc=1&ofpcc=1&msp=1&odepv=1&id=53a47eb700e4adc2&ip=fda3%3Ae722%3Aac3%3A10%3A66%3Ab11b%3Aa84%3A24e&mt=1776900009&oweuc=&pxtags=Cg4KAnR4Egg1MTc3NDM0OQ&rxtags=Cg4KAnR4Egg1MTc3NDM0OQ%2CCg4KAnR4Egg1MTc3NDM1Mg"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
