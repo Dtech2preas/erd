@@ -642,7 +642,7 @@ object MusicRepository {
         }
 
         // 2. Fetch new URL
-        val streamInfo = YoutubeClient.getStreamUrl(context, webUrl)
+        val streamInfo = InnerTubeClient.getStreamUrl(context, videoId)
 
         // 3. Parse Expiration & Cache
         if (isValidStreamUrl(streamInfo.url)) {
