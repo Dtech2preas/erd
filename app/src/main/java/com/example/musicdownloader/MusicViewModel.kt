@@ -399,8 +399,8 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             try {
-                AppLogger.log("[ViewModel] Calling YoutubeClient.getStreamUrl...")
-                val streamInfo = YoutubeClient.getStreamUrl(getApplication(), video.webUrl)
+                AppLogger.log("[ViewModel] Calling MusicRepository.getStreamUrlWithCache...")
+                val streamInfo = MusicRepository.getStreamUrlWithCache(getApplication(), video.id, video.webUrl)
                 AppLogger.log("[ViewModel] Stream Info received. URL Length: ${streamInfo.url.length}, isHls: ${streamInfo.isHls}")
 
                 if (streamInfo.url.isNotBlank()) {
